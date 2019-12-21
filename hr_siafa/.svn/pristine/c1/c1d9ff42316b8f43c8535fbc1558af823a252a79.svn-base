@@ -1,0 +1,31 @@
+from odoo import api, fields, models, _
+
+class ContractType(models.Model):
+
+    _inherit = 'hr.contract.type'
+    
+    contractor = fields.Boolean(string='Is Subcontractor')
+    
+
+class HrSubcontractor(models.Model):
+
+    _name = 'hr.subcontractor'
+    _description = 'Subcontractor'
+    
+    name = fields.Char(string='Name', required=True)
+    
+class Contract(models.Model):
+
+    _inherit = 'hr.contract'
+    
+    wage_allowance = fields.Float('Other Allowance', digits=(16, 2))
+    ot_rate = fields.Float('Overtime Rate', digits=(4, 2))
+    ded_rate = fields.Float('Deduction Rate', digits=(4, 2))
+    subcontractor_id = fields.Many2one('hr.subcontractor', string='Subcontractor', domain="")
+    is_contractor = fields.Boolean(related='type_id.contractor',string='Is Subcontractor', store=True, readonly=True)
+    visa_no = fields.Char('Iqama No')
+    visa_expire = fields.Date('Iqama Expire Date')
+    baladiya_medical = fields.Boolean('Baladiya Medical')
+    baladiya_medical_expire = fields.Date('Baladiya Medical Expire Date')
+    analytic_account_id = fields.Many2one('account.analytic.account', 'Analytic Account', required=True)
+    journal_id = fields.Many2one('account.journal', 'Salary Journal', required=True)

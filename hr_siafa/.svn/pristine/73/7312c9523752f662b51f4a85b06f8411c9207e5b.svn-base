@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <record id="view_employee_form_hr_siafa_inherit1" model="ir.ui.view">
+        <field name="name">hr.employee.form.hr.siafa.inherit1</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/div[2]" position="inside">
+                <label for="code" class="oe_edit_only"/>
+                <h3>
+                    <field name="code" placeholder="Employee's Code"/>
+                </h3>
+            </xpath>
+            
+            <xpath expr="//notebook/page[3]/group" position="inside">
+                <group string='Process' name="hr_process">
+                    <field name="medical" />
+                    <field name="iqama_fees" />
+                    <field name="insurance" />
+                    <field name="contract_prep" />
+                    
+                </group>
+            </xpath>
+            
+            <field name="bank_account_id" position="after">
+                <field name="bank_atm_expire"/>
+            </field>
+            
+            <field name="work_phone" position="after">
+                <field name="contract_typeid"/>
+                <field name="is_contractor" invisible="1" />
+                <field name="subcontractorid" attrs="{'invisible': [('is_contractor','=',False)], 'required': [('is_contractor','=',True)]}" />
+            </field>
+
+            <field name="calendar_id" position="replace">
+                <field name="calendar_id" required="True"/>
+            </field>
+        </field>
+    </record>
+    
+    <record id="view_employee_filter_hr_siafa_inherit1" model="ir.ui.view">
+        <field name="name">hr.employee.search.hr.siafa.inherit1</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_filter" />
+        <field name="arch" type="xml">
+            <field name="name" position="replace">
+                <field name="name" string="Employees" filter_domain="['|','|','|',('work_email','ilike',self),('name','ilike',self),('code','ilike',self),('identification_id','ilike',self)]"/>
+            </field>
+            <filter name="inactive" position="after">
+                <filter string="Contract Type" domain="[]" context="{'group_by':'contract_typeid'}"/>
+                <filter string="Subcontractor" domain="[]" context="{'group_by':'subcontractorid'}"/>
+            </filter>
+            <field name="name" position="after" >
+                <field name="contract_typeid" />
+                <field name="subcontractorid" />
+                
+            </field>
+        </field>
+    </record>
+    
+</odoo>

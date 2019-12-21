@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <record id="view_subcontractor_report_pivot" model="ir.ui.view">
+        <field name="name">subcontractor.report.pivot</field>
+        <field name="model">subcontractor.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Subcontractor Fees Analysis" disable_linking="True">
+                <field name="subcontractor_fees" type="measure"/>
+                <field name="payslip_run_id" type="row"/>
+                <field name="subcontractor_id" type="row"/>
+            </pivot>
+        </field>
+    </record>
+    
+    <record id="view_subcontractor_report_graph" model="ir.ui.view">
+         <field name="name">subcontractor.report.graph</field>
+         <field name="model">subcontractor.report</field>
+         <field name="arch" type="xml">
+             <graph string="Subcontractor Fees Analysis">
+                 <field name="subcontractor_id" type="row"/>
+                 <field name="subcontractor_fees" type="measure"/>
+             </graph>
+         </field>
+    </record>
+    
+    <record id="view_subcontractor_report_search" model="ir.ui.view">
+        <field name="name">subcontractor.report.search</field>
+        <field name="model">subcontractor.report</field>
+        <field name="arch" type="xml">
+            <search string="Subcontractor Fees Analysis">
+                <field name="date"/>
+                <filter string="This Month" name="current_month" domain="[('date','&lt;', (context_today()+relativedelta(months=1)).strftime('%%Y-%%m-01')),('date','&gt;=',time.strftime('%%Y-%%m-01'))]"/>
+                <separator/>
+                <field name="subcontractor_id"/>
+                <field name="employee_id"/>
+                <field name="analytic_account_id"/>
+                <field name="payslip_run_id"/>
+                <group expand="0" string="Group By">
+                    <filter string="Subcontractor" name="Subcontractor" context="{'group_by':'subcontractor_id'}"/>
+                    <filter string="Employee" context="{'group_by':'employee_id'}"/>
+                    <filter string="Analytic Account" name="analytic_account_id" context="{'group_by':'analytic_account_id'}"/>
+                    <filter string="Payslip Batch" name="PayslipBatch" context="{'group_by':'payslip_run_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <record id="action_subcontractor_report" model="ir.actions.act_window">
+        <field name="name">Subcontractor Fees Analysis</field>
+            <field name="res_model">subcontractor.report</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">pivot,graph</field>
+        <field name="view_id"></field>  <!-- force empty -->
+        <field name="search_view_id" ref="view_subcontractor_report_search"/>
+        <field name="context">{'search_default_current_month':1, 'group_by_no_leaf':1,'group_by':[]}</field>
+        <field name="help">This report performs analysis on subcontractor fees to be paid for their employees.</field>
+    </record>
+    
+    <menuitem 
+        id="menu_hr_payroll_report" 
+        name="Reports" 
+        parent="hr_payroll.menu_hr_payroll_root" 
+        groups="hr_payroll.group_hr_payroll_manager" 
+        sequence="20"/>
+    
+    <menuitem 
+        action="action_subcontractor_report" 
+        id="menu_subcontractor_report" 
+        parent="hr_siafa.menu_hr_payroll_report" 
+        sequence="10" />
+
+</odoo>

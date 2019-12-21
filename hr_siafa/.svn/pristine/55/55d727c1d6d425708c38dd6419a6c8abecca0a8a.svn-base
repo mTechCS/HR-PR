@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        
+        <!-- Salary Rules -->
+
+        <record id="bank_salary_head_list" model="ir.ui.view">
+            <field name="name">bank.salary.head.list</field>
+            <field name="model">bank.salary.head</field>
+            <field name="arch" type="xml">
+                <search string="Bank Salary Head">
+                    <field name="name"/>
+                    <field name="company_id"/>
+                </search>
+            </field>
+        </record>
+
+        <record id="bank_salary_head_tree" model="ir.ui.view">
+            <field name="name">bank.salary.head.tree</field>
+            <field name="model">bank.salary.head</field>
+            <field eval="20" name="priority"/>
+            <field name="arch" type="xml">
+                <tree string="Salary Rules">
+                    <field name="sequence" widget="handle" />
+                    <field name="name"/>
+                    <field name="company_id"/>
+                </tree>
+            </field>
+        </record>
+        <record id="bank_salary_head_form" model="ir.ui.view">
+            <field name="name">bank.salary.head.form</field>
+            <field name="model">bank.salary.head</field>
+            <field name="arch" type="xml">
+                <form string="Bank Salary Head">
+                    <group>
+                        <group>
+                            <field name="sequence" widget="handle"/>
+                            <field name="name" />
+                            <field name="company_id" options="{'no_create': True}" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_bank_salary_head_filter" model="ir.ui.view">
+            <field name="name">bank.salary.head.select</field>
+            <field name="model">bank.salary.head</field>
+            <field name="arch" type="xml">
+                <search string="Search Bank Salary Head">
+                    <field name="name" string="Bank Salary Head" filter_domain="['|',('name','ilike',self),('code','ilike',self)]"/>
+                    <field name="company_id"/>
+                    <group col="8" colspan="4" expand="0" string="Group By">
+                        <filter string="Company" name="company" context="{'group_by':'company_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_bank_salary_head_form" model="ir.actions.act_window">
+            <field name="name">Bank Salary Head</field>
+            <field name="res_model">bank.salary.head</field>
+            <field name="view_type">form</field>
+            <field name="view_id" ref="bank_salary_head_list"/>
+            <field name="search_view_id" ref="view_bank_salary_head_filter"/>
+        </record>
+
+        <menuitem id="menu_action_bank_salary_head_form" action="action_bank_salary_head_form" parent="hr_payroll.menu_hr_payroll_configuration" sequence="13"/>
+
+</odoo>

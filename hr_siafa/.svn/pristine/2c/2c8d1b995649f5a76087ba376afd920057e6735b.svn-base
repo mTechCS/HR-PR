@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="hr_salary_rule_form_hr_siafa_inherit" model="ir.ui.view">
+            <field name="name">hr.salary.rule.form.hr.siafa.inherit</field>
+            <field name="model">hr.salary.rule</field>
+            <field name="inherit_id" ref="hr_payroll_account.hr_salary_rule_form_inherit"/>
+            <field name="arch" type="xml">
+                <field name="account_tax_id" position="after">
+                    <field name="is_cash_payment"/>
+                </field>
+            </field>
+    </record>
+    
+    <record id="view_hr_payslip_form_hr_siafa_inherit1" model="ir.ui.view">
+            <field name="name">hr.payslip.form.hr.siafa.inherit1</field>
+            <field name="model">hr.payslip</field>
+            <field name="inherit_id" ref="hr_payroll.view_hr_payslip_form" />
+            <field name="arch" type="xml">
+                <field name="payslip_run_id" position="after">
+                    <field name="wage_net" invisible="0" />
+                </field>
+            </field>
+    </record>
+    
+    <record id="hr_payslip_run_form_hr_siafa_inherit1" model="ir.ui.view">
+            <field name="name">hr.payslip.run.form.hr.siafa.inherit1</field>
+            <field name="model">hr.payslip.run</field>
+            <field name="inherit_id" ref="hr_payroll.hr_payslip_run_form" />
+            <field name="arch" type="xml">
+                <button name="draft_payslip_run" position="replace">
+                </button>
+                
+                <label for="name" position="before">
+                    <div class="oe_button_box" name="button_box">
+                        <button 
+                            string="Payslips"
+                            name="action_view_paylsip"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-print" />
+                        <button 
+                            string="Payments"
+                            name="action_view_payment"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-dollar" 
+                            groups="hr_siafa.group_hr_employee_payment" />
+                    </div>
+                </label>
+                
+                <xpath expr="//separator[1]" position="replace" />
+                <field name="slip_ids" position="replace"/>
+                
+                <xpath expr="//group[1]" position="after">
+                    <notebook>
+                        <page string="Payslips">
+                            <field name="slip_ids"/>
+                        </page>
+                        <page string="Payments" groups="hr_siafa.group_hr_employee_payment">
+                            <field name="payment_ids"/>
+                        </page>
+                    </notebook>
+                </xpath>
+            </field>
+    </record>
+
+</odoo>

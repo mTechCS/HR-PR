@@ -1,0 +1,7 @@
+# -*- coding: utf-8 -*-
+
+import hr
+import hr_contract
+import hr_payroll_account
+import hr_holidays
+import res_partner

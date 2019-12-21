@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        
+        <record id="confirm_payslip_form_view" model="ir.ui.view">
+            <field name="name">confirm.payslip.form</field>
+            <field name="model">confirm.payslip</field>
+            <field name="arch" type="xml">
+                <form string="Confirm Selected Payslip">
+                    <footer>
+                        <button name="action_payslip_confirm" string="Confirm" type="object" class="oe_highlight"/> or
+                        <button special="cancel" string="Cancel" type="object" class="oe_link"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <act_window name="Confirm Selected Payslip"
+            res_model="confirm.payslip"
+            src_model="hr.payslip"
+            view_mode="form"
+            target="new"
+            multi="True"
+            groups="hr.group_hr_manager"
+            id="action_confirm_payslip" />
+        
+</odoo>    

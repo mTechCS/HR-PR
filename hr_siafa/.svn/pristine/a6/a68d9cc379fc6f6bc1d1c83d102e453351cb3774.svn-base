@@ -1,0 +1,57 @@
+from odoo import api, fields, models
+
+class Employee(models.Model):
+
+    _inherit = "hr.employee"
+    
+    @api.model
+    def name_search(self, name, args=None, operator='ilike', limit=100):
+        args = args or []
+        recs = self.browse()
+        if name:
+            recs = self.search([('name', '=', name)] + args, limit=limit)
+        if not recs:
+            recs = self.search([('name', operator, name)] + args, limit=limit)
+        if not recs:
+            recs = self.search([('code', '=', name)] + args, limit=limit)
+        if not recs:
+            recs = self.search([('code', operator, name)] + args, limit=limit)
+        if not recs:
+            recs = self.search([('identification_id', '=', name)] + args, limit=limit)
+        if not recs:
+            recs = self.search([('identification_id', operator, name)] + args, limit=limit)
+        return recs.name_get()
+    
+    @api.one
+    @api.depends('contract_id','contract_id.type_id')
+    def _compute_contract_type(self):
+        # we can not use related fields because contract_id is also compute so gitting error of access
+        if len(self.contract_id):
+            self.contract_typeid = self.contract_id.type_id.id or False
+        else:
+            self.contract_typeid =False
+    
+    @api.one
+    @api.depends('contract_id','contract_id.subcontractor_id')
+    def _compute_subcontractor(self):
+        # we can not use related fields because contract_id is also compute so gitting error of access
+        if len(self.contract_id):
+            self.subcontractorid = self.contract_id.subcontractor_id.id or False
+        else:
+            self.subcontractorid =False
+    
+    code = fields.Char('Code')
+    identification_id = fields.Char(string='Identification No', groups='hr.group_hr_user', required=True)
+    medical = fields.Boolean('Medical')
+    iqama_fees = fields.Boolean('New Iqama Fees')
+    insurance = fields.Boolean('Insurance')
+    contract_prep = fields.Boolean('Contract Preparation')
+    bank_atm_expire = fields.Date('ATM Card Expire Date')
+    address_home_id = fields.Many2one('res.partner', string='Home Address',domain="[('employee','=',True)]", required=True)
+    contract_typeid = fields.Many2one('hr.contract.type', compute='_compute_contract_type', readonly=True, store=True, string="Contract Type")
+    subcontractorid = fields.Many2one('hr.subcontractor', compute='_compute_subcontractor',readonly=True, store=True,  string="Subcontractor")
+    is_contractor = fields.Boolean(related='contract_id.type_id.contractor',string='Is Subcontractor',readonly=True)
+
+    _sql_constraints = [
+        ('identification_id_uniq', 'unique (identification_id)', 'The identification number must be unique !')
+    ]

@@ -1,0 +1,18 @@
+from odoo import fields, models, api
+
+
+class HrPayrollConfigSettings(models.TransientModel):
+    _inherit = 'hr.payroll.config.settings'
+    
+    bank_account_journal_setting = fields.Many2one('account.journal', string='Bank Journal', domain=[('type','=','bank')])    
+    cash_account_journal_setting = fields.Many2one('account.journal', string='Cash Journal', domain=[('type','=','cash')])    
+    
+    @api.multi
+    def set_bank_account_journal_defaults(self):
+        return self.env['ir.values'].sudo().set_default(
+            'hr.payroll.config.settings', 'bank_account_journal_setting', self.bank_account_journal_setting.id, company_id=self.env.user.company_id.id)
+            
+    @api.multi
+    def set_cash_account_journal_defaults(self):
+        return self.env['ir.values'].sudo().set_default(
+            'hr.payroll.config.settings', 'cash_account_journal_setting', self.cash_account_journal_setting.id, company_id=self.env.user.company_id.id)

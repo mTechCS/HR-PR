@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_hr_subcontractor_manager,hr.subcontractor.manager,model_hr_subcontractor,hr.group_hr_manager,1,1,1,1
+access_hr_subcontractor_user,hr.subcontractor.user,model_hr_subcontractor,hr.group_hr_user,1,0,0,0
+access_subcontractor_report_manager,subcontractor.report.manager,model_subcontractor_report,hr_payroll.group_hr_payroll_manager,1,1,1,1
+access_bank_salary_head_manager,bank.salary.head.manager,model_bank_salary_head,hr.group_hr_manager,1,1,1,1
+access_bank_salary_head_user,bank.salary.head.user,model_bank_salary_head,hr.group_hr_user,1,0,0,0
+access_emp_grade_manager,emp.grade.manager,model_emp_grade,hr_payroll.group_hr_payroll_manager,1,1,1,1

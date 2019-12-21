@@ -1,0 +1,9 @@
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError
+
+class BankSalaryHead(models.Model):
+
+    _name = "bank.salary.head"
+    
+    name = fields.Char('Name')
+    company_id = fields.Many2one('res.company', string='Company')

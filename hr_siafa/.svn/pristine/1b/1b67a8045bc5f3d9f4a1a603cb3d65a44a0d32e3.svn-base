@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <record id="hr_contract_type_view_form_hr_siafa_inherit1" model="ir.ui.view">
+        <field name="name">hr.contract.type.form.hr.siafa.inherit1</field>
+        <field name="model">hr.contract.type</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_type_view_form" />
+        <field name="arch" type="xml">
+            <field name="name" position="replace">
+                <field name="name" />
+                <field name="contractor" />
+            </field>
+        </field>
+    </record>
+    
+    <record id="hr_contract_type_view_tree_hr_siafa_inherit1" model="ir.ui.view">
+        <field name="name">hr.contract.type.tree.hr.siafa.inherit1</field>
+        <field name="model">hr.contract.type</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_type_view_tree" />
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="contractor" />
+            </field>
+        </field>
+    </record>
+    
+    <!-- HrSubcontractor Start -->
+    <record id="hr_subcontractor_view_form" model="ir.ui.view">
+        <field name="name">hr.subcontractor.form</field>
+        <field name="model">hr.subcontractor</field>
+        <field name="arch" type="xml">
+            <form string="Subcontractor">
+                <group col="4">
+                    <field colspan="4" name="name"/>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="hr_subcontractor_view_tree" model="ir.ui.view">
+        <field name="name">hr.subcontractor.tree</field>
+        <field name="model">hr.subcontractor</field>
+        <field name="arch" type="xml">
+            <tree string="Subcontractor">
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="hr_subcontractor_view_search" model="ir.ui.view">
+        <field name="name">hr.subcontractor.search</field>
+        <field name="model">hr.subcontractor</field>
+        <field name="arch" type="xml">
+            <search string="Search Subcontractor">
+                <field name="name" string="Subcontractor"/>
+           </search>
+        </field>
+    </record>
+
+    <record id="action_hr_subcontractor" model="ir.actions.act_window">
+        <field name="name">Subcontractor</field>
+        <field name="res_model">hr.subcontractor</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="hr_subcontractor_view_search"/>
+    </record>
+
+    <menuitem
+        id="hr_menu_subcontractor"
+        action="action_hr_subcontractor"
+        parent="hr.menu_human_resources_configuration"
+        sequence="3"
+        groups="base.group_no_one"/>
+    <!-- HrSubcontractor End -->
+    
+    <record id="hr_contract_view_form" model="ir.ui.view">
+        <field name="name">hr.contract.form</field>
+        <field name="model">hr.contract</field>
+        <field name="inherit_id" ref="hr_contract.hr_contract_view_form" />
+        <field name="arch" type="xml">
+            <field name="type_id" position="after">
+                <field name="is_contractor" invisible="1" />
+                <field name="subcontractor_id" attrs="{'invisible': [('is_contractor','=',False)], 'required': [('is_contractor','=',True)]}" />
+            </field>
+            
+            <field name="visa_expire" position="after">
+                <field name="baladiya_medical"/>
+                <field name="baladiya_medical_expire" attrs="{'invisible': [('baladiya_medical','=',False)]}" />
+            </field>
+        </field>
+    </record>
+    
+    
+</odoo>

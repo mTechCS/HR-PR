@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <record id="view_partner_form_hr_siafa_inherit" model="ir.ui.view">
+            <field name="name">res.partner.form.hr.siafa.inherit</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <group name="purchase" position="after">
+                    <group string="Human Resource" name="human_resource">
+                        <field name="employee"/>
+                    </group>
+                </group>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

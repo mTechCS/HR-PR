@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        
+        <record id="bank_transfer_sheet_form_view" model="ir.ui.view">
+            <field name="name">bank.transfer.sheet.form</field>
+            <field name="model">bank.transfer.sheet</field>
+            <field name="arch" type="xml">
+                <form string="Bank Transfer Sheet">
+                    <footer>
+                        <button name="generate_bank_sheet" string="Generate" type="object" class="oe_highlight"/> or
+                        <button special="cancel" string="Cancel" type="object" class="oe_link"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <act_window name="Bank Transfer Sheet"
+            res_model="bank.transfer.sheet"
+            src_model="hr.payslip.run"
+            view_mode="form"
+            target="new"
+            multi="True"
+            groups="hr.group_hr_manager"
+            id="action_bank_transfer_sheet" />
+        
+</odoo>    

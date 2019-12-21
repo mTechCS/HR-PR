@@ -1,0 +1,10 @@
+# -*- coding: utf-8 -*-
+
+import res_config
+import hr
+import hr_contract
+import hr_payroll
+import hr_holidays
+import res_partner
+import account_payment
+import bank_salary_head

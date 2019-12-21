@@ -1,0 +1,242 @@
+from odoo import api, fields, models, tools, _
+from odoo.exceptions import UserError
+from odoo.tools import float_compare, float_is_zero
+import logging
+
+_logger = logging.getLogger(__name__)
+
+class HrPayslip(models.Model):
+    _inherit = 'hr.payslip'
+    
+    @api.model
+    def create(self, values):
+        if not values.get('payslip_run_id',False):
+            raise UserError(_('You can create payslip only through batch!!!'))
+        return super(HrPayslip, self).create(values)
+    
+    @api.one
+    @api.depends('line_ids')
+    def _wage_net(self):
+        """ Fetches Net Salary from Salary Computation"""
+        payslip_line = self.line_ids.filtered(lambda l: l.code == 'NET')
+        self.wage_net = payslip_line.amount
+        
+    wage_net = fields.Float("Net Wage", compute='_wage_net', store=True)
+    
+    @api.multi
+    def action_payslip_done(self):
+        ### Custom: 1. Calling compute_sheet
+        ### 2. Analytic account pulling from contract
+        ### 3. Merging all definition of function here
+        ### 4. Fetching partner directly from employee's home address
+        self.compute_sheet()
+        
+        precision = self.env['decimal.precision'].precision_get('Payroll')
+
+        for slip in self:
+            line_ids = []
+            debit_sum = 0.0
+            credit_sum = 0.0
+            date = slip.date or slip.date_to
+
+            name = _('Payslip of %s') % (slip.employee_id.name)
+            move_dict = {
+                'narration': name,
+                'ref': slip.number,
+                'journal_id': slip.journal_id.id,
+                'date': date,
+            }
+            _logger.info('@@@@@@@@@action_payslip_done###slip.employee_id.name## %s', slip.employee_id.name)
+            _logger.info('@@@@@@@@@action_payslip_done###slip.contract_id.name## %s', slip.contract_id.name)
+            _logger.info('@@@@@@@@@action_payslip_done###slip.contract_id.analytic_account_id.id## %s', slip.contract_id.analytic_account_id.id)
+            for line in slip.details_by_salary_rule_category:
+                amount = slip.credit_note and -line.total or line.total
+                
+                if float_is_zero(amount, precision_digits=precision):
+                    continue
+                    
+                partner = line._get_emp_partner_id()
+                if not partner:
+                    raise UserError(_('Partner not configured for employee: %s!') % (slip.employee_id.name))
+                
+                debit_account_id = line.salary_rule_id.account_debit.id
+                credit_account_id = line.salary_rule_id.account_credit.id
+                _logger.info('@@@@@@@@@action_payslip_done###line.name## %s', line.name)
+                _logger.info('@@@@@@@@@action_payslip_done###line.salary_rule_id## %s', line.salary_rule_id)
+                _logger.info('@@@@@@@@@action_payslip_done###line.salary_rule_id.name## %s', line.salary_rule_id.name)
+                _logger.info('@@@@@@@@@action_payslip_done###amount## %s', amount)
+                _logger.info('@@@@@@@@@action_payslip_done###slip.credit_note## %s', slip.credit_note)
+                _logger.info('@@@@@@@@@action_payslip_done###line.total## %s', line.total)
+                _logger.info('@@@@@@@@@action_payslip_done###debit_account_id## %s', debit_account_id)
+                _logger.info('@@@@@@@@@action_payslip_done###credit_account_id## %s', credit_account_id)
+                
+                _logger.info('@@@@@@@@@action_payslip_done###line.salary_rule_id.ignore_analytic_account_id## %s', line.salary_rule_id.ignore_analytic_account_id)
+                if debit_account_id:
+                    debit_line = (0, 0, {
+                        'name': line.name,
+                        'partner_id': partner.id,
+                        'account_id': debit_account_id,
+                        'journal_id': slip.journal_id.id,
+                        'date': date,
+                        'debit': amount > 0.0 and amount or 0.0,
+                        'credit': amount < 0.0 and -amount or 0.0,
+                        'analytic_account_id': not line.salary_rule_id.ignore_analytic_account_id and amount > 0.0 and slip.contract_id.analytic_account_id.id or False,
+                        'tax_line_id': line.salary_rule_id.account_tax_id.id,
+                    })
+                    _logger.info('@@@@@@@@@action_payslip_done###debit_line## %s', debit_line)
+                    line_ids.append(debit_line)
+                    debit_sum += debit_line[2]['debit'] - debit_line[2]['credit']
+
+                if credit_account_id:
+                    credit_line = (0, 0, {
+                        'name': line.name,
+                        'partner_id': partner.id,
+                        'account_id': credit_account_id,
+                        'journal_id': slip.journal_id.id,
+                        'date': date,
+                        'debit': amount < 0.0 and -amount or 0.0,
+                        'credit': amount > 0.0 and amount or 0.0,
+                        'analytic_account_id': not line.salary_rule_id.ignore_analytic_account_id and amount < 0.0 and slip.contract_id.analytic_account_id.id or False,
+                        'tax_line_id': line.salary_rule_id.account_tax_id.id,
+                    })
+                    _logger.info('@@@@@@@@@action_payslip_done###credit_line## %s', credit_line)
+                    line_ids.append(credit_line)
+                    credit_sum += credit_line[2]['credit'] - credit_line[2]['debit']
+            _logger.info('@@@@@@@@@action_payslip_done###float_compare## %s', float_compare(credit_sum, debit_sum, precision_digits=precision))        
+            _logger.info('@@@@@@@@@action_payslip_done###float_compare#@@@@# %s', float_compare(debit_sum, credit_sum, precision_digits=precision))        
+            if float_compare(credit_sum, debit_sum, precision_digits=precision) == -1:
+                acc_id = slip.journal_id.default_credit_account_id.id
+                if not acc_id:
+                    raise UserError(_('The Expense Journal "%s" has not properly configured the Credit Account!') % (slip.journal_id.name))
+                adjust_credit = (0, 0, {
+                    'name': _('Adjustment Entry'),
+                    'partner_id': False,
+                    'account_id': acc_id,
+                    'journal_id': slip.journal_id.id,
+                    'date': date,
+                    'debit': 0.0,
+                    'credit': debit_sum - credit_sum,
+                })
+                line_ids.append(adjust_credit)
+
+            elif float_compare(debit_sum, credit_sum, precision_digits=precision) == -1:
+                acc_id = slip.journal_id.default_debit_account_id.id
+                if not acc_id:
+                    raise UserError(_('The Expense Journal "%s" has not properly configured the Debit Account!') % (slip.journal_id.name))
+                adjust_debit = (0, 0, {
+                    'name': _('Adjustment Entry'),
+                    'partner_id': False,
+                    'account_id': acc_id,
+                    'journal_id': slip.journal_id.id,
+                    'date': date,
+                    'debit': credit_sum - debit_sum,
+                    'credit': 0.0,
+                })
+                line_ids.append(adjust_debit)
+            _logger.info('@@@@@@@@@action_payslip_done###line_ids## %s', line_ids)    
+            move_dict['line_ids'] = line_ids
+            move = self.env['account.move'].create(move_dict)
+            slip.write({'move_id': move.id, 'date': date})
+            move.post()
+#        aaa
+        return self.write({'state': 'done'})
+    
+class HrPayslipLine(models.Model):
+    _inherit = 'hr.payslip.line'
+    
+    def _get_emp_partner_id(self):
+        ### Customize- Return partner_id from employee's Home address
+        partner_id = self.slip_id.employee_id.address_home_id
+        return partner_id or False
+    
+class HrPayslipRun(models.Model):
+    _inherit = 'hr.payslip.run'
+    
+    payment_ids = fields.One2many('account.payment', 'payslip_run_id', string='Payments', readonly=True)
+    
+    @api.multi
+    def action_view_payment(self):
+        action = self.env.ref('account.action_account_payments_payable').read()[0]
+        action['domain'] = [('payslip_run_id', 'in', self.ids)]
+        return action
+    
+    @api.multi
+    def action_view_paylsip(self):
+        action = self.env.ref('hr_payroll.action_view_hr_payslip_form').read()[0]
+        action['domain'] = [('payslip_run_id', 'in', self.ids)]
+        return action
+    
+    @api.multi
+    def close_payslip_run(self):
+        ### Customize- 1. Make all draft payslips as done
+        ### 2. Generate bank and cash payment
+        res = super(HrPayslipRun, self).close_payslip_run()
+        todo_slips = self.slip_ids.filtered(lambda s: s.state in ('draft','verify'))
+        todo_slips.action_payslip_done()
+        
+        ### Generate vendor payments
+        self._generate_outbound_payment()
+        return res
+    
+    def _get_payment_vals(self, payslip, journal_id, amount, payment_type, payment_method_id):
+        print "inside _get_payment_vals"
+        return {
+            'payslip_run_id': self.id,
+            'payslip_id': payslip.id,
+            'amount': amount,
+            'payment_date': self.date_end,
+            'communication': payslip.name,
+            'partner_id': payslip.employee_id.address_home_id.id,
+            'partner_type': 'supplier',
+            'journal_id': journal_id,
+            'payment_type': payment_type,
+            'payment_method_id': payment_method_id,
+        }
+    
+    def _generate_outbound_payment(self):
+        print "inside _generate_outbound_payment"
+        ir_values = self.env['ir.values']
+        account_journal = self.env['account.journal']
+                
+        company_id = self.env.user.company_id.id
+        bank_account_journal_id = ir_values.get_default('hr.payroll.config.settings', 'bank_account_journal_setting', company_id=company_id)
+        bank_journal = account_journal.browse(bank_account_journal_id)
+        cash_account_journal_id = ir_values.get_default('hr.payroll.config.settings', 'cash_account_journal_setting', company_id=company_id)
+        cash_journal = account_journal.browse(cash_account_journal_id)
+        
+        payment_type = self.credit_note and 'inbound' or 'outbound'
+        if payment_type == 'inbound':
+            payment_method = self.env.ref('account.account_payment_method_manual_in')
+            bank_journal_payment_methods = bank_journal.inbound_payment_method_ids
+            cash_journal_payment_methods = cash_journal.inbound_payment_method_ids
+        else:
+            payment_method = self.env.ref('account.account_payment_method_manual_out')
+            bank_journal_payment_methods = bank_journal.outbound_payment_method_ids
+            cash_journal_payment_methods = cash_journal.outbound_payment_method_ids
+
+        if (payment_method not in bank_journal_payment_methods) or (payment_method not in cash_journal_payment_methods):
+            raise UserError(_('No appropriate payment method enabled on journal %s') % pay_journal.name)
+        
+        for payslip in self.slip_ids:
+            cash_salary_lines = payslip.line_ids.filtered(lambda l: l.salary_rule_id.is_cash_payment == True)
+            cash_amount = sum([l.amount for l in cash_salary_lines])
+            bank_amount = payslip.wage_net - cash_amount
+
+            ### Create Bank Payment
+            payment_vals = self._get_payment_vals(payslip, bank_journal.id, bank_amount, payment_type, payment_method.id)
+            bank_payment = self.env['account.payment'].create(payment_vals)
+            print "bank_payment: ",bank_payment
+
+            ### Create Cash Payment
+            if cash_amount >  0.0:
+                payment_vals = self._get_payment_vals(payslip, cash_journal.id, cash_amount, payment_type, payment_method.id)
+                cash_payment = self.env['account.payment'].create(payment_vals)
+                print "cash_payment: ",cash_payment
+                
+        return True
+    
+class HrSalaryRule(models.Model):
+    _inherit = 'hr.salary.rule'
+    
+    is_cash_payment = fields.Boolean('Cash Payment')
+    ignore_analytic_account_id = fields.Boolean('Ignore Analytic Account')

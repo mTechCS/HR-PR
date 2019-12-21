@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+
+<odoo>
+  <report 
+            id="hr_payroll.action_report_payslip" 
+            model="hr.payslip" 
+            string="Payslip"
+            report_type="qweb-pdf"
+            name="hr_siafa.report_payslip_siafa" 
+            file="hr_siafa.report_payslip_siafa"
+        />
+</odoo>

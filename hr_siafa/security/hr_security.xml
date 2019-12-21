@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <record id="group_hr_employee_payment" model="res.groups">
+        <field name="name">Employee Payments</field>
+        <field name="category_id" ref="base.module_category_hidden"/>
+    </record>
+    
+    <record id="bank_salary_head_comp_rule" model="ir.rule">
+        <field name="name">Bank Salary Head multi company rule</field>
+        <field name="model_id" ref="model_bank_salary_head"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">['|',('company_id','=',False),('company_id','child_of',[user.company_id.id])]</field>
+    </record>
+    
+</odoo>
+

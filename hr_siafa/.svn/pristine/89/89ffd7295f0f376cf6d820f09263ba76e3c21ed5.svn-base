@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <report
+            id="bank_transfer_report_xlsx"
+            model="bank.transfer.sheet"
+            string="Bank Transfer Sheet"
+            report_type="xlsx"
+            name="hr_siafa.bank_transfer_xlsx.xlsx"
+            file="hr_siafa.bank_transfer_xlsx.xlsx"
+            attachment_use="False"
+        />
+        
+    </data>
+</odoo>
